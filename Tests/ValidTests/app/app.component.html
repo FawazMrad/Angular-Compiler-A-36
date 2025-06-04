@@ -1,0 +1,25 @@
+<div class="flex flex-row-reverse h-screen">
+  <!-- قسم تفاصيل المنتج -->
+  <div class="w-1/2 bg-gray-100 p-4 flex flex-col">
+    <ng-container *ngIf="selectedProduct">
+      <img class="w-40 h-40 object-cover" [src]="selectedProduct.image" alt="Product Image">
+      <h2 class="text-2xl font-bold mt-4"> {{ selectedProduct.name }}</h2>
+      <p class="text-gray-600 mt-2"> {{ selectedProduct.description }}</p>
+      <p class="text-lg font-semibold mt-4">Price: ${{ selectedProduct.price }}</p>
+    </ng-container>
+    <p *ngIf="!selectedProduct" class="text-gray-500">Select a product to view details.</p>
+  </div>
+
+  <!-- قسم قائمة المنتجات -->
+  <div class="w-1/2 bg-white p-4 flex flex-col gap-4 overflow-y-auto">
+    <div
+      *ngFor="let product of products"
+      (click)="selectProduct(product)"
+      class="p-4 border rounded-lg shadow hover:shadow-lg transition cursor-pointer flex items-center gap-4"
+    >
+      <img class="w-16 h-16 object-cover rounded" [src]="product.image" alt="Product Image">
+      <h3 class="text-lg font-medium"> {{ product.name }}</h3>
+    </div>
+  </div>
+</div>
+
