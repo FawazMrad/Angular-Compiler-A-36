@@ -9,29 +9,19 @@ file
   | plainTsFile
   ;
 
-/////////////////componentFile with interface
-//angularComponentFile
-//  : importDeclarations
-//    (classDeclaration | interfaceDeclaration)*  // Allow multiple declarations before decorators
-//    decoratorDeclaration+                      // One or more decorators
-//    classDeclaration                           // The main decorated class (exactly one)
-//    (classDeclaration | interfaceDeclaration)* // Allow additional classes/interfaces after
-//    RBRACE
-//    EOF
-//  ;
-
 angularComponentFile
   : importDeclarations classDeclaration* decoratorDeclaration+ classDeclaration* RBRACE EOF
   ;
 
 
 plainTsFile
-  : plainStatement* EOF
+  : importDeclarations
+  plainStatement* EOF
   ;
 
 plainStatement
-  : importDeclaration           #ImportDeclarationStmt
-  | classDeclarations           #ClassDeclarationsStmt
+//  : importDeclaration            #ImportDeclarationStmt
+    :classDeclarations           #ClassDeclarationsStmt
   | exportVariableDeclaration   #ExportVariableDeclarationStmt
   | functionCallStatement       #FunctionCallStmt
   | variableDeclaration         #VariableDeclarationStmt
@@ -61,25 +51,6 @@ importList
 importDeclarations
   : importDeclaration (importDeclaration)*
   ;
-
-//interfaceDeclaration
-//  : EXPORT? INTERFACE IDENTIFIER (EXTENDS IDENTIFIER (COMMA IDENTIFIER)*)?
-//    LBRACE interfaceMember* RBRACE
-//  ;
-//
-//interfaceMember
-//  : propertySignature
-//  | methodSignature
-//  ;
-//
-//propertySignature
-//  : IDENTIFIER (QUAS)? COLON typeName SEMICOLON
-//  ;
-//
-//methodSignature
-//  : IDENTIFIER LPAREN parameterList? RPAREN COLON typeName SEMICOLON
-//  ;
-
 classDeclaration
   : EXPORT? CLASS IDENTIFIER (EXTENDS IDENTIFIER)? LBRACE classMember* RBRACE
   ;
@@ -99,12 +70,14 @@ classMember
   ;
 
 variableDeclaration
-  : CONST? IDENTIFIER (COLON typeName)? (ASSIGN expression)? SEMICOLON
+  : ( CONST | LET )? IDENTIFIER (COLON typeName)? (ASSIGN expression)? SEMICOLON
   ;
 
 typeName
-  : IDENTIFIER (Point IDENTIFIER)*
+  : TYPE (Point IDENTIFIER)*     #RegularType
+  |IDENTIFIER (Point IDENTIFIER)* #CustomType
   ;
+
 
 
 methodDeclaration
@@ -176,6 +149,7 @@ expression
   | arrayLiteral                 #ArrayLiteralExpr
   | objectLiteral                #ObjectLiteralExpr
   | expression AS typeName       #TypeAssertionExpr
+  |expression OPERATOR expression  #OperationalExpr
   ;
 
 methodChain

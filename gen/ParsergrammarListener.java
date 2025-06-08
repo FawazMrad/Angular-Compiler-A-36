@@ -38,18 +38,6 @@ public interface ParsergrammarListener extends ParseTreeListener {
 	 */
 	void exitPlainTsFile(Parsergrammar.PlainTsFileContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ImportDeclarationStmt}
-	 * labeled alternative in {@link Parsergrammar#plainStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterImportDeclarationStmt(Parsergrammar.ImportDeclarationStmtContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ImportDeclarationStmt}
-	 * labeled alternative in {@link Parsergrammar#plainStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitImportDeclarationStmt(Parsergrammar.ImportDeclarationStmtContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code ClassDeclarationsStmt}
 	 * labeled alternative in {@link Parsergrammar#plainStatement}.
 	 * @param ctx the parse tree
@@ -248,15 +236,29 @@ public interface ParsergrammarListener extends ParseTreeListener {
 	 */
 	void exitVariableDeclaration(Parsergrammar.VariableDeclarationContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link Parsergrammar#typeName}.
+	 * Enter a parse tree produced by the {@code RegularType}
+	 * labeled alternative in {@link Parsergrammar#typeName}.
 	 * @param ctx the parse tree
 	 */
-	void enterTypeName(Parsergrammar.TypeNameContext ctx);
+	void enterRegularType(Parsergrammar.RegularTypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link Parsergrammar#typeName}.
+	 * Exit a parse tree produced by the {@code RegularType}
+	 * labeled alternative in {@link Parsergrammar#typeName}.
 	 * @param ctx the parse tree
 	 */
-	void exitTypeName(Parsergrammar.TypeNameContext ctx);
+	void exitRegularType(Parsergrammar.RegularTypeContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code CustomType}
+	 * labeled alternative in {@link Parsergrammar#typeName}.
+	 * @param ctx the parse tree
+	 */
+	void enterCustomType(Parsergrammar.CustomTypeContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code CustomType}
+	 * labeled alternative in {@link Parsergrammar#typeName}.
+	 * @param ctx the parse tree
+	 */
+	void exitCustomType(Parsergrammar.CustomTypeContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link Parsergrammar#methodDeclaration}.
 	 * @param ctx the parse tree
@@ -525,6 +527,18 @@ public interface ParsergrammarListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFunctionCallExpr(Parsergrammar.FunctionCallExprContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code OperationalExpr}
+	 * labeled alternative in {@link Parsergrammar#expression}.
+	 * @param ctx the parse tree
+	 */
+	void enterOperationalExpr(Parsergrammar.OperationalExprContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code OperationalExpr}
+	 * labeled alternative in {@link Parsergrammar#expression}.
+	 * @param ctx the parse tree
+	 */
+	void exitOperationalExpr(Parsergrammar.OperationalExprContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code TypeAssertionExpr}
 	 * labeled alternative in {@link Parsergrammar#expression}.

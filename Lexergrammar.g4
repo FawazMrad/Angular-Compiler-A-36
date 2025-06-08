@@ -1,99 +1,9 @@
-//lexer grammar Lexergrammar;
-/////////////TS
-//
-//TEMPLATE:'template';
-//CONST: 'const';
-//IMPORT: 'import';
-//EXPORT: 'export';
-//CLASS: 'class';
-//EXTENDS: 'extends';
-//FROM: 'from';
-//
-///////////////////// CSS
-//CSS_COMMENT: '/*' .*? '*/' ;
-//
-//CSS_AT_RULE: '@tailwind' WS+ IDENTIFIER;
-//
-//DESCRIBE: 'describe';
-//IT: 'it';
-//BEFORE_EACH: 'beforeEach';
-//ASYNC: 'async';
-//AWAIT: 'await';
-//TO_CONTAIN: 'toContain';
-//EXPECT: 'expect';
-//TO_BE_TRUTHY: 'toBeTruthy';
-//TO_EQUAL: 'toEqual';
-//
-//NUMBER: [0-9]+;
-//AT: '@';
-//LPAREN: '(';
-//RPAREN: ')';
-//SELECTOR: 'selector';
-//STANDALONE: 'standalone';
-//IMPORTS: 'imports';
-//TEMPLATEURL: 'templateUrl';
-//STYLEURL: 'styleUrl';
-//COLON: ':';
-//COMMA: ',';
-//TRUE: 'true';
-//FALSE: 'false';
-//LBRACKET: '[';
-//RBRACKET: ']';
-//
-//LCURLY: '{{';
-//RCURLY: '}}';
-//ASSIGN : '=';
-//StringLiteral    : '"' (~["])* '"' ;
-//Point : '.';
-//GT: '>';
-//LT: '<';
-//LTE:'<=';
-//GTE:'>=';
-//AS : 'as';
-//QUAS : '?';
-//BACKTICK: '`';
-//QUOTE: '\'';
-//DOUBLE_QUOTE: '"';
-//ARROW: '=>';
-//MODULE_PATH: '@angular' '.' IDENTIFIER ( '.' IDENTIFIER )* | './' IDENTIFIER ( '/' IDENTIFIER )* IDENTIFIER ( '.' IDENTIFIER )*;
-//LBRACE: '{';
-//RBRACE: '}';
-//SEMICOLON: ';';
-//OPERATOR: '+' | '-' | '*' | '/';
-//TYPE: 'string' | 'number' | 'boolean';
-//WS: [ \t\r\n]+ -> skip;
-//COMMENT: '//' ~[\r\n]* -> skip;
-//MULTILINE_COMMENT: '/*' .*? '*/' -> skip;
-//
-//TEXT: [^<>{}]+ ;
-//
-//STRING: '\'' ( ~['\\] | '\\' . )* '\''
-//      | '"' ( ~["\\] | '\\' . )* '"'
-//      |'"' .*? '"';
-//
-//IDENTIFIER: [a-zA-Z_$][a-zA-Z0-9_$-]*;
-//TEMPLATE_LITERAL_STRING:'`' ( ~["\\] | '\\' . )* '`';
-//
-//
-//// HTML Rules
-//HTML_TAG_OPEN: '<' IDENTIFIER;
-//HTML_TAG_CLOSE: '</' IDENTIFIER '>';
-//HTML_SELF_CLOSING_TAG: '<' IDENTIFIER '/>';
-//HTML_ATTRIBUTE: IDENTIFIER '=' STRING;
-//ANGULAR_DIRECTIVE: '*' IDENTIFIER '=' STRING;
-//BINDING: '[' IDENTIFIER ']' '=' STRING;
-//EVENT_BINDING: '(' IDENTIFIER ')' '=' STRING;
-//INTERPOLATION: '{{' .*? '}}';
-//
-//
-//HTML_COMMENT: '<!--' .*? '-->';
-//
-//DOCTYPE_DECLARATION: '<!doctype' WS+ 'html' WS* '>';
 lexer grammar Lexergrammar;
 
 /////////// TypeScript Keywords
 TEMPLATE:'template';
 CONST: 'const';
+LET:'let';
 IMPORT: 'import';
 EXPORT: 'export';
 CLASS: 'class';
@@ -112,7 +22,7 @@ TO_EQUAL: 'toEqual';
 TRUE: 'true';
 FALSE: 'false';
 AS : 'as';
-TYPE: 'string' | 'number' | 'boolean';
+TYPE: 'string' | 'number' | 'boolean'|'any';
 
 /////////// CSS
 CSS_AT_RULE: '@tailwind' WS+ IDENTIFIER;

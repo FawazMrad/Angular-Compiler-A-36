@@ -29,13 +29,6 @@ public interface ParsergrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPlainTsFile(Parsergrammar.PlainTsFileContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ImportDeclarationStmt}
-	 * labeled alternative in {@link Parsergrammar#plainStatement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitImportDeclarationStmt(Parsergrammar.ImportDeclarationStmtContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code ClassDeclarationsStmt}
 	 * labeled alternative in {@link Parsergrammar#plainStatement}.
 	 * @param ctx the parse tree
@@ -153,11 +146,19 @@ public interface ParsergrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVariableDeclaration(Parsergrammar.VariableDeclarationContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link Parsergrammar#typeName}.
+	 * Visit a parse tree produced by the {@code RegularType}
+	 * labeled alternative in {@link Parsergrammar#typeName}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTypeName(Parsergrammar.TypeNameContext ctx);
+	T visitRegularType(Parsergrammar.RegularTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code CustomType}
+	 * labeled alternative in {@link Parsergrammar#typeName}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCustomType(Parsergrammar.CustomTypeContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link Parsergrammar#methodDeclaration}.
 	 * @param ctx the parse tree
@@ -316,6 +317,13 @@ public interface ParsergrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitFunctionCallExpr(Parsergrammar.FunctionCallExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code OperationalExpr}
+	 * labeled alternative in {@link Parsergrammar#expression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitOperationalExpr(Parsergrammar.OperationalExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code TypeAssertionExpr}
 	 * labeled alternative in {@link Parsergrammar#expression}.

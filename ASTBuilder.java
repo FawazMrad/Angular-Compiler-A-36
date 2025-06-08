@@ -1,20 +1,18 @@
-import Classes.ComponentSpecific.*;
-import Classes.DeclarationsAndStatements.*;
-import Classes.Expressions.*;
-import Classes.FileStructure.AngularComponentFileNode;
-import Classes.FileStructure.FileNode;
-import Classes.FileStructure.PlainTsFileNode;
-import Classes.HelperStructure.*;
-import Classes.Statements.AssignmentStmtNode;
-import Classes.Statements.FunctionCallStmtNode;
-import Classes.Statements.StatementNode;
-import Classes.Statements.VariableDeclStmtNode;
-import Classes.SymbolTable.*;
-import Classes.SymbolTable.Rows.*;
-import Classes.SymbolTable.Tables.*;
+import Classes.ASTNodeClasses.ComponentSpecific.*;
+import Classes.ASTNodeClasses.DeclarationsAndStatements.*;
+import Classes.ASTNodeClasses.Expressions.*;
+import Classes.ASTNodeClasses.FileStructure.AngularComponentFileNode;
+import Classes.ASTNodeClasses.FileStructure.FileNode;
+import Classes.ASTNodeClasses.FileStructure.PlainTsFileNode;
+import Classes.ASTNodeClasses.HelperStructure.*;
+import Classes.ASTNodeClasses.Statements.AssignmentStmtNode;
+import Classes.ASTNodeClasses.Statements.FunctionCallStmtNode;
+import Classes.ASTNodeClasses.Statements.StatementNode;
+import Classes.ASTNodeClasses.Statements.VariableDeclStmtNode;
+import Classes.SymbolTableClasses.Rows.*;
+import Classes.SymbolTableClasses.Tables.*;
 import gen.Parsergrammar;
 import gen.ParsergrammarBaseVisitor;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.*;
@@ -29,14 +27,17 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
     private final VariableSymbolTable variableSymbolTable;
     private final FunctionSymbolTable functionSymbolTable;
     private String currentDecoratorName = null;
+    private String currentFileName;
+    private static final String TEST_SCOPE_PREFIX = "test_";
 
-    public ASTBuilder(ImportSymbolTable importSymbolTable, DecoratorSymbolTable decoratorSymbolTable, ClassSymbolTable classSymbolTable, VariableSymbolTable variableSymbolTable, FunctionSymbolTable functionSymbolTable) {
+    public ASTBuilder(ImportSymbolTable importSymbolTable, DecoratorSymbolTable decoratorSymbolTable, ClassSymbolTable classSymbolTable, VariableSymbolTable variableSymbolTable, FunctionSymbolTable functionSymbolTable, String fileName) {
         this.importSymbolTable = importSymbolTable;
         this.decoratorSymbolTable = decoratorSymbolTable;
         this.classSymbolTable = classSymbolTable;
         this.variableSymbolTable = variableSymbolTable;
         this.functionSymbolTable = functionSymbolTable;
         scopeStack.push("global");
+        this.currentFileName = fileName;
     }
 
     private String currentScope() {
@@ -52,7 +53,7 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
     }
 
     private void printSymbolTables() {
-        System.out.println("=== Symbol Tables ===");
+        System.out.println("=== Symbol Tables === ");
         importSymbolTable.print();
         decoratorSymbolTable.print();
         classSymbolTable.print();
@@ -161,42 +162,27 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
 
     @Override
     public FileNode visitPlainTsFile(Parsergrammar.PlainTsFileContext ctx) {
+        // Process imports
+        List<ImportDeclarationNode> imports = new ArrayList<>();
+        if (ctx.importDeclarations() != null) {
+            ImportDeclarationsNode importsNode = (ImportDeclarationsNode) visit(ctx.importDeclarations());
+            imports = importsNode != null ? importsNode.getImports() : Collections.emptyList();
+        }
+
+        // Process statements
         List<StatementNode> statements = new ArrayList<>();
-
-
-        if (ctx != null && ctx.plainStatement() != null) {
+        if (ctx.plainStatement() != null) {
             for (Parsergrammar.PlainStatementContext stmtCtx : ctx.plainStatement()) {
-
                 if (stmtCtx != null) {
                     FileNode result = visit(stmtCtx);
-
-                    if (result != null && result instanceof StatementNode) {
+                    if (result instanceof StatementNode) {
                         statements.add((StatementNode) result);
                     }
                 }
             }
         }
 
-        return new PlainTsFileNode(statements);
-    }
-
-    @Override
-    public FileNode visitImportDeclarationStmt(Parsergrammar.ImportDeclarationStmtContext ctx) {
-
-        Parsergrammar.ImportDeclarationContext importCtx = ctx.importDeclaration();
-        List<String> imports = new ArrayList<>();
-        Parsergrammar.ImportListContext importList = importCtx.importList();
-
-
-        for (TerminalNode id : importList.IDENTIFIER()) {
-            imports.add(id.getText());
-
-
-            importSymbolTable.addRow(new ImportRow(id.getText(), importCtx.STRING().getText().replaceAll("['\"]", ""), ctx.getStart().getLine(), "global"));
-        }
-
-
-        return new ImportDeclarationNode(imports, importCtx.STRING().getText().substring(1, importCtx.STRING().getText().length() - 1));
+        return new PlainTsFileNode(imports, statements);
     }
 
     @Override
@@ -209,7 +195,7 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
 
             classSymbolTable.addRow(new Row(className, "class", classCtx.EXTENDS() != null ? classCtx.IDENTIFIER(1).getText() : null, classCtx.getStart().getLine(), currentScope()));
 
-            scopeStack.push(className);
+            scopeStack.push(className + ctx.getStart().getLine());
 
             List<ClassMemberNode> members = new ArrayList<>();
             for (Parsergrammar.ClassMemberContext memberCtx : classCtx.classMember()) {
@@ -254,10 +240,11 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
         VariableDeclarationNode varDecl = (VariableDeclarationNode) visitVariableDeclaration(ctx.exportVariableDeclaration().variableDeclaration());
 
 
-        VariableRow varRow = new VariableRow(varDecl.getIdentifier(), varDecl.isConst() ? "const" : "let", varDecl.getTypeName() != null ? String.join(".", varDecl.getTypeName()) : null, varDecl.getInitializer(), ctx.getStart().getLine(), currentScope(), true);
+        //VariableRow varRow = new VariableRow(varDecl.getIdentifier(), varDecl.isConst() ? "const" : "let", varDecl.getTypeName() != null ? String.join(".", varDecl.getTypeName()) : null, varDecl.getInitializer(), ctx.getStart().getLine(), currentScope(), true);
 
 
-        variableSymbolTable.addRow(varRow);
+        //
+        //variableSymbolTable.addRow(varRow);
 
         return new ExportVariableDeclarationNode(varDecl);
     }
@@ -344,7 +331,8 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
         variableSymbolTable.enterScope(className);
         classSymbolTable.addRow(new Row(className, "class", ctx.EXTENDS() != null && ctx.IDENTIFIER().size() > 1 ? ctx.IDENTIFIER(1).getText() : null, ctx.getStart() != null ? ctx.getStart().getLine() : -1, currentScope()));
 
-        scopeStack.push(className);
+        String classScope = "class_" + className + "_" + ctx.getStart().getLine();
+        scopeStack.push(classScope);
         List<ClassMemberNode> members = new ArrayList<>();
         if (ctx.classMember() != null) {
             for (Parsergrammar.ClassMemberContext memberCtx : ctx.classMember()) {
@@ -365,7 +353,7 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
             }
         }
         scopeStack.pop();
-
+        variableSymbolTable.exitScope();
         return new ClassDeclarationNode(isExported, className, ctx.EXTENDS() != null && ctx.IDENTIFIER().size() > 1 ? ctx.IDENTIFIER(1).getText() : null, members);
     }
 
@@ -381,25 +369,32 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
         return new ClassDeclarationsNode(declarations);
     }
 
+
     @Override
     public FileNode visitExportVariableDeclaration(Parsergrammar.ExportVariableDeclarationContext ctx) {
-
         VariableDeclarationNode varDecl = (VariableDeclarationNode) visitVariableDeclaration(ctx.variableDeclaration());
 
+        // Handle Routes type specially
+        String typeName = varDecl.getTypeName() != null ? String.join(".", varDecl.getTypeName()) : null;
 
-        variableSymbolTable.addRow(new VariableRow(varDecl.getIdentifier(), varDecl.isConst() ? "const" : "let", varDecl.getTypeName() != null ? String.join(".", varDecl.getTypeName()) : null, varDecl.getInitializer(), ctx.getStart().getLine(), currentScope(), true));
+        if (typeName != null && typeName.endsWith("Routes")) {
+            typeName = "Routes";
+        }
 
+        VariableRow varRow = new VariableRow(varDecl.getIdentifier(), varDecl.isConst() ? "const" : "let", typeName, varDecl.getInitializer() != null ? varDecl.getInitializer().toString() : null, ctx.getStart().getLine(), currentScope(), true);
+
+        variableSymbolTable.addRow(varRow);
         return new ExportVariableDeclarationNode(varDecl);
     }
-
 
     @Override
     public FileNode visitVariableMember(Parsergrammar.VariableMemberContext ctx) {
         VariableDeclarationNode varDecl = (VariableDeclarationNode) visitVariableDeclaration(ctx.variableDeclaration());
 
-        variableSymbolTable.addRow(new VariableRow(varDecl.getIdentifier(), "field", varDecl.getTypeName() != null ? String.join(".", varDecl.getTypeName()) : null, varDecl.getInitializer(), ctx.getStart().getLine(), currentScope(), false));
+        // variableSymbolTable.addRow(new VariableRow(varDecl.getIdentifier(), "field", varDecl.getTypeName() != null ? String.join(".", varDecl.getTypeName()) : null, varDecl.getInitializer(), ctx.getStart().getLine(), currentScope(), false));
         return varDecl;
     }
+
 
     @Override
     public FileNode visitMethodMember(Parsergrammar.MethodMemberContext ctx) {
@@ -417,84 +412,54 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
 
         boolean isConst = ctx.CONST() != null;
         String identifier = ctx.IDENTIFIER().getText();
-        String type = inferType(ctx);
+
+        // Get declared type from typeName
+        List<String> typeParts = null;
+        if (ctx.typeName() != null) {
+            TypeNameWrapperNode typeWrapper = (TypeNameWrapperNode) visit(ctx.typeName());
+            typeParts = typeWrapper.getWrappedTypeName().getParts();
+        }
+
+        // Process initializer
         ExpressionNode initializer = null;
         String initializerString = null;
-
         if (ctx.expression() != null) {
             FileNode exprNode = visit(ctx.expression());
             if (exprNode instanceof ExpressionNode) {
                 initializer = (ExpressionNode) exprNode;
                 initializerString = serializeExpression(initializer);
-
-                if (type == null) {
-                    type = inferTypeFromExpression(initializer);
-                }
             }
         }
 
+        variableSymbolTable.addRow(new VariableRow(identifier, isConst ? "const" : "let", typeParts != null ? String.join(".", typeParts) : "any", initializerString, ctx.getStart() != null ? ctx.getStart().getLine() : -1, currentScope(), false));
 
-        variableSymbolTable.addRow(new VariableRow(identifier, isConst ? "const" : "let", type != null ? type : "any", initializerString, ctx.getStart() != null ? ctx.getStart().getLine() : -1, currentScope(), false));
-
-        return new VariableDeclarationNode(isConst, identifier, type != null ? List.of(type.split("\\.")) : null, initializer);
+        return new VariableDeclarationNode(isConst, identifier, typeParts, initializer);
     }
 
     private String serializeExpression(ExpressionNode expr) {
         if (expr == null) return null;
 
+        // For symbol table, we just need a basic string representation
         if (expr instanceof LiteralExprNode) {
-            LiteralExprNode lit = (LiteralExprNode) expr;
-            return "string".equals(lit.getType()) ? "\"" + lit.getValue() + "\"" : lit.getValue();
-        } else if (expr instanceof ArrayLiteralExprNode) {
-            ArrayLiteralExprNode arr = (ArrayLiteralExprNode) expr;
-            return arr.getElements().stream().map(this::serializeExpression).collect(Collectors.joining(", ", "[", "]"));
-        } else if (expr instanceof ObjectLiteralExprNode) {
-            ObjectLiteralExprNode obj = (ObjectLiteralExprNode) expr;
-            return obj.getProperties().stream().map(this::serializeProperty).collect(Collectors.joining(", ", "{", "}"));
+            return ((LiteralExprNode) expr).getValue().toString();
         }
-        return expr.toString();
-    }
-
-    private String serializeProperty(ObjectPropertyNode prop) {
-        if (prop instanceof StringPropNode) {
-            StringPropNode sp = (StringPropNode) prop;
-            return "\"" + sp.getKey() + "\": " + serializeExpression(sp.getValue());
-        } else if (prop instanceof IdentifierObjectPropertyNode) {
-            IdentifierObjectPropertyNode ip = (IdentifierObjectPropertyNode) prop;
-            return ip.getKey() + ": " + serializeExpression(ip.getValue());
-        }
-        return prop.toString();
-    }
-
-    private String inferType(Parsergrammar.VariableDeclarationContext ctx) {
-        if (ctx.typeName() != null && ctx.typeName().IDENTIFIER() != null) {
-            return ctx.typeName().IDENTIFIER().stream().map(TerminalNode::getText).collect(Collectors.joining("."));
-        }
-        return null;
-    }
-
-    private String inferTypeFromExpression(ExpressionNode expr) {
-        if (expr instanceof LiteralExprNode) {
-            return ((LiteralExprNode) expr).getType();
-        } else if (expr instanceof ArrayLiteralExprNode) {
-
-            ArrayLiteralExprNode array = (ArrayLiteralExprNode) expr;
-            if (!array.getElements().isEmpty()) {
-                ExpressionNode firstElement = array.getElements().get(0);
-                String elementType = inferTypeFromExpression(firstElement);
-                return elementType + "[]";
-            }
-            return "any[]";
-        } else if (expr instanceof ObjectLiteralExprNode) {
-            return "object";
-        } else if (expr instanceof IdentifierExprNode) {
-            return ((IdentifierExprNode) expr).getIdentifier();
-        }
-        return "any";
+        return expr.toString();  // Default for other expressions
     }
 
     @Override
-    public FileNode visitTypeName(Parsergrammar.TypeNameContext ctx) {
+    public FileNode visitRegularType(Parsergrammar.RegularTypeContext ctx) {
+
+        List<String> parts = new ArrayList<>();
+        parts.add(ctx.TYPE().getText());
+        for (TerminalNode id : ctx.IDENTIFIER()) {
+            parts.add(id.getText());
+        }
+//        return new TypeNameNode(parts);
+        return new TypeNameWrapperNode(new TypeNameNode(parts));
+    }
+
+    @Override
+    public FileNode visitCustomType(Parsergrammar.CustomTypeContext ctx) {
         List<String> parts = new ArrayList<>();
         parts.add(ctx.IDENTIFIER(0).getText());
 
@@ -503,6 +468,7 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
         }
 
 
+//        return new TypeNameNode(parts);
         return new TypeNameWrapperNode(new TypeNameNode(parts));
     }
 
@@ -512,14 +478,23 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
         if (ctx == null || ctx.IDENTIFIER() == null) return null;
 
         String methodName = ctx.IDENTIFIER().getText();
-        variableSymbolTable.enterScope(methodName);
+        int line = ctx.getStart().getLine();
+
+        // Get current class scope from scope stack
+        String currentClass = scopeStack.stream().filter(scope -> scope.startsWith("class_")).findFirst().orElse("global");
+
+        // Create unique method scope with class context
+        String methodScope = currentClass + "_method_" + methodName + "_" + line;
+
+        // Push method scope to both scope stacks
+        scopeStack.push(methodScope);
+        variableSymbolTable.enterScope(methodScope);
+
         List<ParameterNode> parameters = new ArrayList<>();
         List<Parameter> symbolTableParams = new ArrayList<>();
-
-
         String returnType = "void";
 
-
+        // Process parameters
         if (ctx.parameterList() != null) {
             for (Parsergrammar.ParameterContext paramCtx : ctx.parameterList().parameter()) {
                 if (paramCtx != null) {
@@ -527,22 +502,27 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
                     if (paramNode != null) {
                         parameters.add(paramNode);
                         String paramType = paramNode.getTypeName() != null ? String.join(".", paramNode.getTypeName().getParts()) : "any";
+
                         symbolTableParams.add(new Parameter(paramNode.getIdentifier(), paramType));
 
-
-                        variableSymbolTable.addRow(new VariableRow(paramNode.getIdentifier(), "parameter", paramType, null, paramCtx.getStart() != null ? paramCtx.getStart().getLine() : -1, methodName, false));
+                        // Add parameter to symbol table with proper method scope
+                        variableSymbolTable.addRow(new VariableRow(paramNode.getIdentifier(), "parameter", paramType, null, paramCtx.getStart().getLine(), methodScope,  // Use detailed scope here
+                                false));
                     }
                 }
             }
         }
 
+        // Add function to symbol table with class context
+        functionSymbolTable.addRow(new FunctionRow(methodName, returnType, symbolTableParams, line, currentClass  // Use class scope as parent
+        ));
 
-        functionSymbolTable.addRow(new FunctionRow(methodName, returnType, symbolTableParams, ctx.getStart() != null ? ctx.getStart().getLine() : -1, currentScope()));
+        // Process method body
+        BlockNode body = ctx.block() != null ? (BlockNode) visitBlock(ctx.block()) : new BlockNode(Collections.emptyList());
 
-
-        scopeStack.push(methodName);
-        BlockNode body = ctx.block() != null ? (BlockNode) visitBlock(ctx.block()) : null;
+        // Pop method scope from both stacks
         scopeStack.pop();
+        variableSymbolTable.exitScope();
 
         return new MethodDeclarationNode(methodName, parameters, body);
     }
@@ -560,10 +540,14 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
     @Override
     public FileNode visitParameter(Parsergrammar.ParameterContext ctx) {
         String identifier = ctx.IDENTIFIER().getText();
-        TypeNameNode typeName = (TypeNameNode) visitTypeName(ctx.typeName());
 
+        TypeNameNode typeName = null;
 
-        variableSymbolTable.addRow(new VariableRow(identifier, "parameter", typeName != null ? String.join(".", typeName.getParts()) : null, null, ctx.getStart().getLine(), currentScope(), false));
+        if (ctx.typeName() != null) {
+            // Dispatch to appropriate alternative visitor
+            TypeNameWrapperNode typeWrapper = (TypeNameWrapperNode) visit(ctx.typeName());
+            typeName = typeWrapper.getWrappedTypeName();
+        }
 
         return new ParameterNode(identifier, typeName);
     }
@@ -695,6 +679,17 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
         return new FunctionCallExprNode(target, arguments, chains);
     }
 
+    @Override
+    public FileNode visitOperationalExpr(Parsergrammar.OperationalExprContext ctx) {
+        if (ctx.expression(0) != null && ctx.expression(1) != null) {
+            ExpressionNode left = (ExpressionNode) visit(ctx.expression(0));
+            ExpressionNode right = (ExpressionNode) visit(ctx.expression(1));
+            String operator = ctx.OPERATOR().getText();
+
+            return new OperationalExprNode(left, operator, right);
+        }
+        return null;
+    }
 
     @Override
     public FileNode visitAssignmentStatement(Parsergrammar.AssignmentStatementContext ctx) {
@@ -746,7 +741,10 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
     @Override
     public FileNode visitTypeAssertionExpr(Parsergrammar.TypeAssertionExprContext ctx) {
         ExpressionNode expression = (ExpressionNode) visit(ctx.expression());
-        List<String> type = ((TypeNameNode) visitTypeName(ctx.typeName())).getParts();
+
+        TypeNameWrapperNode typeWrapper = (TypeNameWrapperNode) visit(ctx.typeName());
+        List<String> type = typeWrapper.getWrappedTypeName().getParts();
+
         return new TypeAssertionExprNode(expression, type);
     }
 
@@ -834,7 +832,7 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
 
         selector = selector.substring(1, selector.length() - 1);
 
-        return new SelectorPropNode(selector);
+        return new SelectorPropNode(selector, ctx.getStart().getLine());
     }
 
 
@@ -942,12 +940,9 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
         ComponentConfigNode config = (ComponentConfigNode) visitComponentConfig(ctx.componentConfig());
         DecoratorDeclarationNode decorator = new DecoratorDeclarationNode(decoratorName, config);
 
-
-        decoratorSymbolTable.addRow(new DecoratorRow(decoratorName, extractDecoratorMetadata(config), ctx.getStart().getLine(), currentScope()));
-
-
         ClassDeclarationNode classNode = (ClassDeclarationNode) visitClassDeclaration(ctx.classDeclaration());
-
+        String className = classNode.getClassName();
+        decoratorSymbolTable.addRow(new DecoratorRow(decoratorName, extractDecoratorMetadata(config), ctx.getStart().getLine(), currentScope(), className, currentFileName));
 
         return new DecoratedClassNode(decorator, classNode);
     }
@@ -1005,7 +1000,7 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
         String selectorValue = selectorText.substring(1, selectorText.length() - 1);
 
 
-        SelectorPropNode selectorNode = new SelectorPropNode(selectorValue);
+        SelectorPropNode selectorNode = new SelectorPropNode(selectorValue, ctx.getStart().getLine());
 
 
         if (currentDecoratorName != null) {
@@ -1174,7 +1169,7 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
         String selector = ctx.STRING().getText();
         selector = selector.substring(1, selector.length() - 1);
 
-        return new SelectorPropNode(selector);
+        return new SelectorPropNode(selector, ctx.getStart().getLine());
     }
 
     @Override
@@ -1221,14 +1216,23 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
             expectedValue = (ExpressionNode) visit(ctx.expression());
         }
 
-        return new MatcherChainNode(matcherType, expectedValue);
+//        return new MatcherChainNode(matcherType, expectedValue);
+        return null;
+    }
+
+    //    @Override
+//    public FileNode visitExpectExpression(Parsergrammar.ExpectExpressionContext ctx) {
+//        ExpressionNode actualValue = (ExpressionNode) visit(ctx.expression());
+//        MatcherChainNode matcher = (MatcherChainNode) visitMatcherChain(ctx.matcherChain());
+//        return new ExpectExpressionNode(actualValue, matcher);
+//    }
+    private boolean isInTestScope() {
+        return scopeStack.stream().anyMatch(scope -> scope.startsWith(TEST_SCOPE_PREFIX));
     }
 
     @Override
     public FileNode visitExpectExpression(Parsergrammar.ExpectExpressionContext ctx) {
-        ExpressionNode actualValue = (ExpressionNode) visit(ctx.expression());
-        MatcherChainNode matcher = (MatcherChainNode) visitMatcherChain(ctx.matcherChain());
-        return new ExpectExpressionNode(actualValue, matcher);
+        return null;
     }
 
     @Override
@@ -1236,13 +1240,14 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
 
         String blockScope = "block_" + ctx.getStart().getLine();
         scopeStack.push(blockScope);
-
+        variableSymbolTable.enterScope(blockScope);
         List<StatementNode> statements = new ArrayList<>();
         for (Parsergrammar.StatementContext stmtCtx : ctx.statement()) {
             statements.add((StatementNode) visit(stmtCtx));
         }
 
         scopeStack.pop();
+        variableSymbolTable.exitScope();
         return new BlockNode(statements);
     }
 
@@ -1315,7 +1320,10 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
 
     @Override
     public FileNode visitDescribeBlockStmt(Parsergrammar.DescribeBlockStmtContext ctx) {
-        return super.visitDescribeBlockStmt(ctx);
+        String describeScope = TEST_SCOPE_PREFIX + "describe_" + ctx.getStart().getLine();
+        scopeStack.push(describeScope);
+        scopeStack.pop();
+        return null;
     }
 
     @Override
@@ -1405,12 +1413,18 @@ public class ASTBuilder extends ParsergrammarBaseVisitor<FileNode> {
 
     @Override
     public FileNode visitItBlock(Parsergrammar.ItBlockContext ctx) {
-        return super.visitItBlock(ctx);
+        String itScope = TEST_SCOPE_PREFIX + "it_" + ctx.getStart().getLine();
+        scopeStack.push(itScope);
+        scopeStack.pop();
+        return null;
     }
 
     @Override
     public FileNode visitBeforeEachBlock(Parsergrammar.BeforeEachBlockContext ctx) {
-        return super.visitBeforeEachBlock(ctx);
+        String beforeEachScope = TEST_SCOPE_PREFIX + "beforeEach_" + ctx.getStart().getLine();
+        scopeStack.push(beforeEachScope);
+        scopeStack.pop();
+        return null;
     }
 
     @Override

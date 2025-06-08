@@ -53,18 +53,6 @@ public class ParsergrammarBaseListener implements ParsergrammarListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterImportDeclarationStmt(Parsergrammar.ImportDeclarationStmtContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitImportDeclarationStmt(Parsergrammar.ImportDeclarationStmtContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterClassDeclarationsStmt(Parsergrammar.ClassDeclarationsStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -281,13 +269,25 @@ public class ParsergrammarBaseListener implements ParsergrammarListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTypeName(Parsergrammar.TypeNameContext ctx) { }
+	@Override public void enterRegularType(Parsergrammar.RegularTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTypeName(Parsergrammar.TypeNameContext ctx) { }
+	@Override public void exitRegularType(Parsergrammar.RegularTypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCustomType(Parsergrammar.CustomTypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCustomType(Parsergrammar.CustomTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -576,6 +576,18 @@ public class ParsergrammarBaseListener implements ParsergrammarListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitFunctionCallExpr(Parsergrammar.FunctionCallExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterOperationalExpr(Parsergrammar.OperationalExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitOperationalExpr(Parsergrammar.OperationalExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
